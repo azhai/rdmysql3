@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 
 from os.path import join, dirname
+
 PROJECT_SRC_DIR = join(dirname(dirname(__file__)), 'src')
 
 MYSQL_CONFS = {
     "default": {
         "drivername": "mysql",
-        "host": "10.10.20.80",
+        "host": "127.0.0.1",
         "port": 3306,
-        "database": "db_test",
-        "username": "dba",
-        "password": "pass",
+        "database": "test",
+        "username": "root",
+        "password": "",
         "charset": "utf8mb4",
         "verbose": False,
     },
@@ -18,7 +19,7 @@ MYSQL_CONFS = {
 
 TEST_TABLE_NAME = "t_user_profiles"
 TEST_CREATE_TABLE_SQL = """
--- Table `t_user_profiles`
+-- Table for UserProfile
 CREATE TABLE IF NOT EXISTS `%s` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `username` varchar(30) NOT NULL DEFAULT '' COMMENT '用户名',

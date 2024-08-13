@@ -3,12 +3,13 @@
 from .expr import Expr
 from .table import Table
 
-def _reset_pk(query, pk = 'id', num = 0):
+
+def _reset_pk(query, pk='id', num=0):
     """ 找出需要重新排列的主键 """
     last_diff, changes = 0, []
     start, stop = 0, 0
     if num > 0:
-        query = query.filter(Expr(pk)>num)
+        query = query.filter(Expr(pk) > num)
     for row in query.order_by(pk).iter(pk):
         id, num = row[pk], num + 1
         curr_diff = id - num
@@ -25,7 +26,7 @@ def _reset_pk(query, pk = 'id', num = 0):
     return changes
 
 
-def reset_model_pk(query, pk = 'id', num = 0):
+def reset_model_pk(query, pk='id', num=0):
     """ 重新排列自增主键 """
     try:
         assert issubclass(query, Table)
@@ -33,7 +34,7 @@ def reset_model_pk(query, pk = 'id', num = 0):
     except TypeError:
         assert isinstance(query, Table)
     table = query.__tablename__
-    changes = _reset_pk(query, pk = pk, num = num)
+    changes = _reset_pk(query, pk=pk, num=num)
     tpl = "UPDATE `%s` SET `%s`=`%s`-%%d WHERE `%s`>=%%d AND `%s`<=%%d" % (table, pk, pk, pk, pk)
     for chg in changes:
         query.db.execute(tpl % chg, type='write')

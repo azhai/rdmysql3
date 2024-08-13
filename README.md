@@ -1,4 +1,4 @@
-# rdmysql3: a simple db layer based on ultra-mysql
+# rdmysql3: A simple db layer based on CyMysql for Python 3.x
 
 ## Installation
 
@@ -7,8 +7,9 @@
 ## Usage:
 
 ``` python
-from datetime import datetime
-from rdmysql3 import Database, Table, Row, Expr, And, Or
+from datetime import datetime, date
+from rdmysql3 import (Database, Table, Daily,
+        Row, Expr, And, Or, iter_query_daily)
 import settings
 
 Database.configures.update(settings.MYSQL_CONFS)
@@ -18,17 +19,29 @@ class UserProfile(Table):
     __tablename__ = 't_user_profiles'
     __indexes__ = ['username']
 
+class UserEvent(Daily):
+    __dbkey__ = "default"
+    __tablename__ = "t_user_events"
+
 query = UserProfile().filter_by(username = 'ryan')
 ryan = query.one(model = Row)
 if ryan:
     print ryan.to_dict()
     now = datetime.now()
     today = now.strftime('%Y%m%d')
-    changed_at = now.strftime('%Y-%m-%d %H:%M:%S')
+    ryan['changed_at'] = now.strftime('%Y-%m-%d %H:%M:%S')
     ryan.change('nickname', 'Ryan-%s' % today)
-    ryan.change('changed_at', changed_at)
     query.save(ryan)
-    print query.db.sqls
+    print(query.db.sqls)
+
+
+def get_all_logins(model):
+    q = model.filter_by(category="login").order_by("id", "DESC")
+    return q.all(model=Row, reset=True)
+query = UserEvent()
+rows = iter_query_daily(query, get_all_logins,
+        stop=date(2024,3,1), fuse=True)
+print(query.db.sqls)
 ```
 
 ## Methods of Table
@@ -70,7 +83,7 @@ There are some methods for class named 'Table':
     count,sum,max,min,avg       param *args
                                 param **kwargs
 
-## Methods of Monthly
+## Methods of Monthly/Weekly/Daily
 
 Monthly is a subclass of Table, There are other two methods for Monthly:
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import cymysql
-import socket
+
 from .expr import And
 
 
@@ -36,13 +36,13 @@ class Database(object):
     def connect(self, conf, **env):
         """ 根据配置连接数据库 """
         conn = cymysql.connect(
-            host = conf.get("host", "127.0.0.1"),
-            user = conf.get("username", "root"),
-            passwd = conf.get("password", ""),
-            db = conf.get("database", None),
-            port = int(conf.get("port", 3306)),
-            charset = conf.get("charset", "utf8mb4"),
-            cursorclass = cymysql.cursors.DictCursor
+            host=conf.get("host", "127.0.0.1"),
+            user=conf.get("username", "root"),
+            passwd=conf.get("password", ""),
+            db=conf.get("database", None),
+            port=int(conf.get("port", 3306)),
+            charset=conf.get("charset", "utf8mb4"),
+            cursorclass=cymysql.cursors.DictCursor
         )
         if conf.get("autocommit") or env.get("autocommit"):
             self.is_auto_commit = True
@@ -57,10 +57,10 @@ class Database(object):
             self.conn = self.__class__.connections.get(self.current)
         if self.conn:
             if force:
-                self.conn.close() # 强制断开
+                self.conn.close()  # 强制断开
             else:
                 try:
-                    is_connected = self.conn.ping(True) # 需要时重连
+                    is_connected = self.conn.ping(True)  # 需要时重连
                 except:
                     print("The connection has losted !")
                     is_connected = False
@@ -99,7 +99,7 @@ class Database(object):
         return sql, params
 
     def execute_cond(self, sql, condition=None, addition="", *values, **kwargs):
-        """ 执行操作，返回结果集ResultSet """
+        """ 执行操作，返回结果 """
         sql, params = self.parse_cond(sql, condition)
         if addition:
             sql += " " + addition.strip()
@@ -114,16 +114,16 @@ class Database(object):
             return [r for r in self.execute_read(sql, *params, **kwargs)]
 
     def execute_write(self, sql, *params, **kwargs) -> int:
-        """ 执行写操作，返回结果tuple """
+        """ 执行写操作，返回影响行数 """
         full_sql = self.add_sql(sql, *params, is_write=True)
-        if self.is_readonly:  #只读，不执行
+        if self.is_readonly:  # 只读，不执行
             return 0
         self.reconnect(False).query(full_sql)
         # return self.conn.affected_rows()
         return self.conn._result.affected_rows
 
     def execute_read(self, sql, *params, **kwargs):
-        """ 执行读操作，返回结果集ResultSet """
+        """ 执行读操作，以迭代形式返回每行 """
         self.add_sql(sql, *params, is_write=False)
         model, count = kwargs.get("model", dict), 0
         with self.reconnect(False).cursor() as cur:
@@ -139,7 +139,7 @@ class Database(object):
                     row = cur.fetchone()
 
     def execute_column(self, sql, *params, **kwargs):
-        """ 执行读操作，返回结果集ResultSet """
+        """ 执行读操作，返回单个值或指定列数组 """
         self.add_sql(sql, *params, is_write=False)
         index = kwargs.get("index", 0)
         cur_class = cymysql.cursors.Cursor
@@ -173,6 +173,7 @@ class Database(object):
             self.rollback.commit()
 
     def insert_id(self) -> int:
+        """ 新插入行的ID """
         if self.conn:
             return self.conn.insert_id()
         else:

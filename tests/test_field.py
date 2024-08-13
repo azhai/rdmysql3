@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import unittest
-import fixure, settings
+import fixure
+import settings
 
 
 class TestField(fixure.TestBase):
@@ -17,14 +17,14 @@ class TestField(fixure.TestBase):
 
     def test_03_table_fields(self):
         fs = [
-            {"name":"id", "type":"int(10) unsigned"},
-            {"name":"username", "type":"varchar(30)"},
-            {"name":"nickname", "type":"varchar(50)"},
-            {"name":"gender", "type":"enum('M','F','X')"},
-            {"name":"avatar", "type":"varchar(200)"},
-            {"name":"mobile", "type":"char(16)"},
-            {"name":"birthday", "type":"char(10)"},
-            {"name":"changed_at", "type":"timestamp"},
+            {"name": "id", "type": "int(10) unsigned"},
+            {"name": "username", "type": "varchar(30)"},
+            {"name": "nickname", "type": "varchar(50)"},
+            {"name": "gender", "type": "enum('M','F','X')"},
+            {"name": "avatar", "type": "varchar(200)"},
+            {"name": "mobile", "type": "char(16)"},
+            {"name": "birthday", "type": "char(10)"},
+            {"name": "changed_at", "type": "timestamp"},
         ]
         fields = self.model.get_table_fields()
         self.assertEqual(len(fs), len(fields))

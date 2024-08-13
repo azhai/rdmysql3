@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import sys, unittest
+import sys
+import unittest
+
 import settings
+
 sys.path.insert(0, settings.PROJECT_SRC_DIR)
 from rdmysql3 import Database, Table
+
 Database.configures.update(settings.MYSQL_CONFS)
 
 
@@ -13,7 +17,6 @@ class UserProfile(Table):
 
 
 class TestBase(unittest.TestCase):
-
     model = UserProfile()
 
     @classmethod

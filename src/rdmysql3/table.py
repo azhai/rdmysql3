@@ -32,20 +32,24 @@ class Table(object):
         return self
 
     def is_table_exists(self):
+        """ 当前数据表是否存在 """
         tablename = self.get_table_name(quote=False)
         tables = self.db.list_tables(tablename, False)
         return len(tables) > 0
 
     def get_tablename(self, quote=False):
+        """ 数据表名称 """
         return self.get_table_name(quote=quote)
 
     def get_table_name(self, quote=False):
+        """ 数据表名称 """
         if quote:
             return self.quote_str(self.__tablename__)
         else:
             return self.__tablename__
 
     def get_table_info(self, columns="TABLE_NAME, TABLE_COMMENT, TABLE_ROWS"):
+        """ 数据表总体信息 """
         if isinstance(columns, (list, tuple, set)):
             columns = ",".join(columns)
         dbname = self.db.get_dbname()
@@ -56,7 +60,8 @@ class Table(object):
         return rows[0] if len(rows) > 0 else {}
 
     def get_table_fields(self, columns=["COLUMN_NAME", "IS_NULLABLE",
-                "DATA_TYPE", "COLUMN_TYPE", "COLUMN_COMMENT"]):
+                                        "DATA_TYPE", "COLUMN_TYPE", "COLUMN_COMMENT"]):
+        """ 数据表各列的信息 """
         if isinstance(columns, (list, tuple, set)):
             columns = ",".join(columns)
         dbname = self.db.get_dbname()
@@ -67,6 +72,7 @@ class Table(object):
         return self.db.execute_cond(sql, condition, addition)
 
     def reset(self, or_cond=False):
+        """ 清空当前的Where、Group by、Order by、Limit等条件 """
         self.condition = Or() if or_cond else And()
         self.additions = {}
         return self
@@ -95,6 +101,7 @@ class Table(object):
         return self
 
     def build_group_order(self, reset=False):
+        """ 生成Group by、Order by、Limit部分的SQL """
         group_order = ""
         for key, vals in self.additions.items():
             item = " %s %s" % (key, ", ".join(vals))
@@ -146,9 +153,10 @@ class Table(object):
         holders = ",".join(["%s"] * len(keys))
         tablename = self.get_table_name(quote=True)
         head = "%s %s %s VALUES (%s)" % (action, tablename, fields, holders)
+        # 改为手动一次提交，最后需要将自动提交恢复（如果是）
         self.db.conn.autocommit(False)
         for i in range(0, count, size):
-            chunk, params = rows[i: i+size], []
+            chunk, params = rows[i: i + size], []
             sql = head + (", (%s)" % holders) * (len(chunk) - 1)
             for row in chunk:
                 params.extend(row)
@@ -190,6 +198,7 @@ class Table(object):
         return self.db.execute_write(sql, *params)  # 影响的行数
 
     def save(self, row, indexes=None, reset=True):
+        """ 根据主键对应id已存在，决定是更新还是插入 """
         assert hasattr(row, "items")
         if indexes is None:  # 使用主键
             indexes = self.__indexes__
@@ -210,6 +219,7 @@ class Table(object):
             return False, affect_rows
 
     def iter(self, columns="*", model=None, index=None, **kwargs):
+        """ 读查询，返回迭代结果 """
         reset = kwargs.pop("reset", True)
         limit = int(kwargs.get("limit", -1))
         offset = int(kwargs.get("offset", 0))
@@ -245,6 +255,7 @@ class Table(object):
             return {}
 
     def apply(self, name, *args, **kwargs):
+        """ 单个值或单列的读查询 """
         name = name.strip().upper()
         if name == "COUNT" and len(args) == 0:
             column = "COUNT(*)"

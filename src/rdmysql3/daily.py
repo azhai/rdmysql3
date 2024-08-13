@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import date, datetime, timedelta
+
 from .archive import Archive
 
 
@@ -102,9 +103,9 @@ class Monthly(Daily):
     def forward(self, qty=1):
         offset = self.calender.month + qty - 1
         self.calender = date(
-            year  = self.calender.year + offset / 12,  #负数除法向下取整
-            month = offset % 12 + 1,  #负数求余结果也是正数或零
-            day   = 1
+            year=self.calender.year + offset / 12,  # 负数除法向下取整
+            month=offset % 12 + 1,  # 负数求余结果也是正数或零
+            day=1
         )
         return self
 
@@ -134,7 +135,7 @@ class Yearly(Daily):
         return self.calender.year - today.year
 
 
-def iter_daily(model, func, stop=None, fuse=False):
+def iter_query_daily(model, func, stop=None, fuse=False):
     assert isinstance(model, Daily)
     result, start = [], model.calender
     while stop is None or start >= stop:

@@ -1,25 +1,25 @@
 # -*- coding: utf-8 -*-
 
-import unittest
-import fixure
 from datetime import datetime
 from rdmysql3 import Row, Expr, Or
 
+import fixure
 
 keys = ["username", "nickname", "gender", "birthday", "changed_at"]
 rows = [
-    ["admin", "Admin", "X", "1985-01-01", datetime(2024,2,28,17,5)],
-    ["bob", "Bob", "M", "1983-02-01", datetime(2024,2,28,17,5)],
-    ["cindy", "Cindy", "F", "1988-03-01", datetime(2024,2,28,17,5)],
-    ["david", "David", "M", "1990-04-01", datetime(2024,2,28,17,5)],
-    ["frank", "Frank", "M", "1976-05-01", datetime(2024,2,28,17,5)],
-    ["grace", "Grace", "F", "2001-06-01", datetime(2024,2,28,17,5)],
-    ["helen", "Helen", "F", "1999-07-01", datetime(2024,2,28,17,5)],
-    ["iris", "Iris", "F", "1993-08-01", datetime(2024,2,28,17,5)],
-    ["jack", "Jack", "M", "2000-09-01", datetime(2024,2,28,17,5)],
+    ["admin", "Admin", "X", "1985-01-01", datetime(2024, 2, 28, 17, 5)],
+    ["bob", "Bob", "M", "1983-02-01", datetime(2024, 2, 28, 17, 5)],
+    ["cindy", "Cindy", "F", "1988-03-01", datetime(2024, 2, 28, 17, 5)],
+    ["david", "David", "M", "1990-04-01", datetime(2024, 2, 28, 17, 5)],
+    ["frank", "Frank", "M", "1976-05-01", datetime(2024, 2, 28, 17, 5)],
+    ["grace", "Grace", "F", "2001-06-01", datetime(2024, 2, 28, 17, 5)],
+    ["helen", "Helen", "F", "1999-07-01", datetime(2024, 2, 28, 17, 5)],
+    ["iris", "Iris", "F", "1993-08-01", datetime(2024, 2, 28, 17, 5)],
+    ["jack", "Jack", "M", "2000-09-01", datetime(2024, 2, 28, 17, 5)],
 ]
 admin = dict(zip(keys, rows[0]))
 spec_birthday = "1988-02-29"
+
 
 class TestUserProfile(fixure.TestBase):
 
