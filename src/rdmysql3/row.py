@@ -49,18 +49,15 @@ class Row(object):
         self._data.update(data)
         return self
 
-    def iteritems(self):
-        for k, v in self._data.iteritems():
-            yield k, self.coerce_string(v)
-
     def items(self):
-        return [item for item in self.iteritems()]
+        for k, v in self._data.items():
+            yield k, self.coerce_value(v)
 
     def to_dict(self):
         return dict(self.items())
 
     @staticmethod
-    def coerce_string(value):
+    def coerce_value(value):
         if isinstance(value, datetime):
             value = value.strftime('%F %T')
         elif isinstance(value, date):

@@ -1,16 +1,14 @@
-# rdmysql: a simple db layer based on ultra-mysql
+# rdmysql3: a simple db layer based on ultra-mysql
 
 ## Installation
 
-    pip install [--no-deps] rdmysql
-
-It required umysql. If you use pypy, use https://github.com/NextThought/ultramysql instand of it.
+    pip install [--no-deps] rdmysql3
 
 ## Usage:
 
 ``` python
 from datetime import datetime
-from rdmysql import Database, Table, Row, Expr, And, Or
+from rdmysql3 import Database, Table, Row, Expr, And, Or
 import settings
 
 Database.configures.update(settings.MYSQL_CONFS)
@@ -36,50 +34,50 @@ if ryan:
 ## Methods of Table
 
 There are some methods for class named 'Table':
-    
+
     insert      param *rows
                 param **kwargs
-    
+
     delete      param **where
-    
+
     update      param changes : dict
                 param **where
-    
+
     save        param changes : dict / object
                 param indexes : list (optional default=[])
-    
+
     filter      param expr : Expr / str
                 param *args
-    
+
     filter_by   param **where
-    
+
     order_by    param field     : str
                 param direction : 'ASC' / 'DESC' (optional default='ASC')
-    
+
     group_by    param field : str
-    
+
     all         param coulmns : str (optional default='*')
                 param limit   : int (optional default=0)
                 param offset  : int (optional default=0)
-    
+
     one         param coulmns : str   (optional default='*')
                 param model   : class (optional default=dict)
-    
+
     apply       param name : str
                 param *args
                 param **kwargs
-    
+
     count,sum,max,min,avg       param *args
                                 param **kwargs
 
 ## Methods of Monthly
 
 Monthly is a subclass of Table, There are other two methods for Monthly:
-    
+
     backward    param monthes : int (optional default=1)
-    
+
     forward     param monthes : int (optional default=1)
-    
+
     set_date    param curr_date : date
-    
+
     migrate     param prev_date : date (When curr_has_suffix is False)

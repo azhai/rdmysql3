@@ -1,0 +1,33 @@
+[project]
+name = "rdmysql3"
+version = "0.3.5"
+description = "A mysql db layer for python3, based on nakagami/CyMySQL"
+readme = "README.md"
+license = {file = "LICENSE"}
+maintainers = [{name = "Ryan Liu", email = "azhai@126.com"}]
+keywords = ["mysql", "database", "model"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "Topic :: Database :: Front-Ends",
+    "License :: OSI Approved :: MIT License",
+]
+dependencies = [
+    "cymysql>=1.0.0",
+]
+requires-python = ">= 3.10"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = []
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rdmysql3"]

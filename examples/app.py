@@ -1,31 +1,30 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-
-import settings
-from rdmysql import Database, Table, Row, Expr, Or
-
+import sys, settings
+sys.path.insert(0, settings.PROJECT_SRC_DIR)
+from rdmysql3 import Database, Table, Row, Expr, Or
 Database.configures.update(settings.MYSQL_CONFS)
 
 
 class UserProfile(Table):
-    __dbkey__ = 'user'
-    __tablename__ = 't_user_profiles'
+    __dbkey__ = "default"
+    __tablename__ = "t_user_profiles"
 
 
 def test_query_all():
     where = Or(Expr('id') < 100, Expr('id') == 100)  # Expr('id') <= 100
     query = UserProfile().filter(where)
-    profs = query.order_by('id', 'DESC').all('*', 3)
+    profs = query.order_by('id', 'DESC').all('*', limit=3)
     if profs is not None:
         assert len(profs) <= 3
-    print query.db.sqls[-1]
+    print(query.db.sqls[-1])
     return profs or []
 
 
 def test_query_one(username):
     query = UserProfile().filter(Expr('username') == username)
-    ryan = query.one('*', Row)
+    ryan = query.one('*', model=Row)
     if ryan is not None:
         assert ryan.username == username
         print(ryan.to_dict())

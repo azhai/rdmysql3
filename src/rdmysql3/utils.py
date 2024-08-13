@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from .expr import Expr
+from .table import Table
+
 def _reset_pk(query, pk = 'id', num = 0):
     """ 找出需要重新排列的主键 """
     last_diff, changes = 0, []

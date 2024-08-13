@@ -5,21 +5,38 @@ from .archive import Archive
 
 
 class Daily(Archive):
-    suffix_mask = '%Y%m%d'
+    _suffix_mask = "%Y%m%d"
 
-    def __init__(self, tablename=''):
+    def __init__(self, tablename=""):
         super(Daily, self).__init__(tablename)
-        self.set_date(date.today())
+        self.set_date()
 
-    def set_date(self, curr_date):
-        assert isinstance(curr_date, date)
-        self.calender = self.adjust_date(curr_date)
+    def set_date(self, curr_date=None):
+        if curr_date is None:
+            self.calender = date.today()
+            return self
+        try:
+            curr_date = self.adjust_date(curr_date)
+        except:
+            pass
+        else:
+            self.calender = curr_date
         return self
 
     def adjust_date(self, calender):
+        if isinstance(calender, str):
+            calender = datetime.strptime(calender, "%Y-%m-%d")
         if isinstance(calender, datetime):
             calender = calender.date()
+        assert isinstance(calender, date)
         return calender
+
+    def is_end_table(self, force=False):
+        table_names = self.list_our_tables(force)
+        if len(table_names) == 0:
+            return True
+        name = self.get_table_name(quote=False)
+        return len(name) > 0 and name == table_names[0]
 
     def get_delta_days(self):
         delta = self.calender - self.adjust_date(date.today())
@@ -34,7 +51,7 @@ class Daily(Archive):
         elif not isinstance(calender, (date, datetime)):
             calender = self.calender
         calender = self.adjust_date(calender)
-        return calender.strftime(self.suffix_mask)
+        return calender.strftime(self._suffix_mask)
 
     def forward(self, qty=1):
         self.calender += timedelta(qty)
@@ -45,8 +62,8 @@ class Daily(Archive):
 
     def migrate(self, prev_date, **where):
         self.set_date(prev_date)
-        prev_name = self.get_tablename(quote=True)
-        if self.is_exists():
+        prev_name = self.get_table_name(quote=True)
+        if self.is_table_exists():
             return 0
         self.set_date(date.today())
         return self._migrate(prev_name, **where)
@@ -55,7 +72,7 @@ class Daily(Archive):
 class Weekly(Daily):
     """ 以周日为一周开始，跨年的一周算作前一年最后一周 """
 
-    suffix_mask = '%Y0%U'
+    _suffix_mask = "%Y0%U"
 
     def adjust_date(self, calender):
         calender = super(Weekly, self).adjust_date(calender)
@@ -74,7 +91,7 @@ class Weekly(Daily):
 
 
 class Monthly(Daily):
-    suffix_mask = '%Y%m'
+    _suffix_mask = "%Y%m"
 
     def adjust_date(self, calender):
         calender = super(Monthly, self).adjust_date(calender)
@@ -84,12 +101,11 @@ class Monthly(Daily):
 
     def forward(self, qty=1):
         offset = self.calender.month + qty - 1
-        ymd = dict(
-            year=self.calender.year + offset / 12,  #负数除法向下取整
-            month=offset % 12 + 1,  #负数求余结果也是正数或零
-            day=1,
+        self.calender = date(
+            year  = self.calender.year + offset / 12,  #负数除法向下取整
+            month = offset % 12 + 1,  #负数求余结果也是正数或零
+            day   = 1
         )
-        self.calender = date(**ymd)
         return self
 
     def get_diff_units(self):
@@ -100,10 +116,10 @@ class Monthly(Daily):
 
 
 class Yearly(Daily):
-    suffix_mask = '%Y'
+    _suffix_mask = "%Y"
 
     def adjust_date(self, calender):
-        calender = super(Monthly, self).adjust_date(calender)
+        calender = super(Yearly, self).adjust_date(calender)
         if calender.month > 1 or calender.day > 1:
             calender = calender.replace(month=1, day=1)
         return calender
@@ -116,3 +132,20 @@ class Yearly(Daily):
     def get_diff_units(self):
         today = date.today()
         return self.calender.year - today.year
+
+
+def iter_daily(model, func, stop=None, fuse=False):
+    assert isinstance(model, Daily)
+    result, start = [], model.calender
+    while stop is None or start >= stop:
+        if model.is_table_exists():
+            data = func(model)
+            if fuse and isinstance(data, list):
+                result.extend(data)
+            else:
+                result.append(data)
+        if model.is_end_table():
+            break
+        model.backward()
+        start = model.calender
+    return result

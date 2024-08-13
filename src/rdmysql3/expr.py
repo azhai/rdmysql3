@@ -140,7 +140,7 @@ class And(object):
         return self
 
     def extend(self, **where):
-        for field, value in where.iteritems():
+        for field, value in where.items():
             self.append(Expr(field) == value)
         return self
 
