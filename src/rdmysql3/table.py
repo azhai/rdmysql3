@@ -5,18 +5,19 @@ from .expr import Expr, And, Or
 
 
 class Table(object):
-    """ 数据表 """
+    """数据表"""
 
     __dbkey__ = "default"
     __tablename__ = ""
     __indexes__ = ["id"]
 
-    def __init__(self, tablename=""):
-        if tablename:
-            self.__tablename__ = tablename
+    def __init__(self, table_name=""):
+        if table_name:
+            self.__tablename__ = table_name
         self.reset()
 
-    def quote_str(self, name):
+    @staticmethod
+    def quote_str(name):
         return "`%s`" % name
 
     @property
@@ -32,47 +33,56 @@ class Table(object):
         return self
 
     def is_table_exists(self):
-        """ 当前数据表是否存在 """
-        tablename = self.get_table_name(quote=False)
-        tables = self.db.list_tables(tablename, False)
+        """当前数据表是否存在"""
+        table_name = self.get_table_name(quote=False)
+        tables = self.db.list_tables(table_name, False)
         return len(tables) > 0
 
     def get_tablename(self, quote=False):
-        """ 数据表名称 """
+        """数据表名称"""
         return self.get_table_name(quote=quote)
 
     def get_table_name(self, quote=False):
-        """ 数据表名称 """
+        """数据表名称"""
         if quote:
             return self.quote_str(self.__tablename__)
         else:
             return self.__tablename__
 
     def get_table_info(self, columns="TABLE_NAME, TABLE_COMMENT, TABLE_ROWS"):
-        """ 数据表总体信息 """
+        """数据表总体信息"""
         if isinstance(columns, (list, tuple, set)):
             columns = ",".join(columns)
         dbname = self.db.get_dbname()
-        tablename = self.get_table_name(quote=False)
+        table_name = self.get_table_name(quote=False)
         sql = "SELECT %s FROM `information_schema`.`TABLES`" % columns
-        condition = And(TABLE_SCHEMA=dbname, TABLE_NAME=tablename)
+        condition = And(TABLE_SCHEMA=dbname, TABLE_NAME=table_name)
         rows = self.db.execute_cond(sql, condition, limit=1, size=1)
-        return rows[0] if len(rows) > 0 else {}
+        if isinstance(rows, list) and len(rows) > 0:
+            return rows[0]
+        return {}
 
-    def get_table_fields(self, columns=["COLUMN_NAME", "IS_NULLABLE",
-                                        "DATA_TYPE", "COLUMN_TYPE", "COLUMN_COMMENT"]):
-        """ 数据表各列的信息 """
+    def get_table_fields(self, columns=None):
+        """数据表各列的信息"""
+        if columns is None:
+            columns = [
+                "COLUMN_NAME",
+                "IS_NULLABLE",
+                "DATA_TYPE",
+                "COLUMN_TYPE",
+                "COLUMN_COMMENT",
+            ]
         if isinstance(columns, (list, tuple, set)):
             columns = ",".join(columns)
         dbname = self.db.get_dbname()
-        tablename = self.get_table_name(quote=False)
+        table_name = self.get_table_name(quote=False)
         sql = "SELECT %s FROM `information_schema`.`COLUMNS`" % columns
-        condition = And(TABLE_SCHEMA=dbname, TABLE_NAME=tablename)
+        condition = And(TABLE_SCHEMA=dbname, TABLE_NAME=table_name)
         addition = "ORDER BY ORDINAL_POSITION"
         return self.db.execute_cond(sql, condition, addition)
 
     def reset(self, or_cond=False):
-        """ 清空当前的Where、Group by、Order by、Limit等条件 """
+        """清空当前的Where、Group by、Order by、Limit等条件"""
         self.condition = Or() if or_cond else And()
         self.additions = {}
         return self
@@ -101,7 +111,7 @@ class Table(object):
         return self
 
     def build_group_order(self, reset=False):
-        """ 生成Group by、Order by、Limit部分的SQL """
+        """生成Group by、Order by、Limit部分的SQL"""
         group_order = ""
         for key, vals in self.additions.items():
             item = " %s %s" % (key, ", ".join(vals))
@@ -111,11 +121,11 @@ class Table(object):
         return group_order
 
     @staticmethod
-    def unzip_pairs(row, keys=[]):
+    def unzip_pairs(row, keys=None):
         if isinstance(row, dict):
             keys = row.keys()
         to_val = lambda v: v.first_param() if isinstance(v, Expr) else v
-        if len(keys) > 0:
+        if isinstance(row, (list, tuple)) and len(keys) > 0:
             fields = "(`%s`)" % "`,`".join(keys)
             values = [to_val(row[key]) for key in keys]
         else:
@@ -131,8 +141,8 @@ class Table(object):
         row = rows.pop(0)
         keys, params, fields = self.unzip_pairs(row)
         holders = ",".join(["%s"] * len(params))
-        tablename = self.get_table_name(quote=True)
-        head = "%s %s %s VALUES (%s)" % (action, tablename, fields, holders)
+        table_name = self.get_table_name(quote=True)
+        head = "%s %s %s VALUES (%s)" % (action, table_name, fields, holders)
         if len(rows) == 0:
             sql = head
         else:  # 插入更多行
@@ -151,26 +161,26 @@ class Table(object):
         size = kwargs.get("size", 100)
         fields = "(`%s`)" % "`,`".join(keys)
         holders = ",".join(["%s"] * len(keys))
-        tablename = self.get_table_name(quote=True)
-        head = "%s %s %s VALUES (%s)" % (action, tablename, fields, holders)
+        table_name = self.get_table_name(quote=True)
+        head = "%s %s %s VALUES (%s)" % (action, table_name, fields, holders)
         # 改为手动一次提交，最后需要将自动提交恢复（如果是）
-        self.db.conn.autocommit(False)
+        self.db.set_auto_commit(False)
         for i in range(0, count, size):
-            chunk, params = rows[i: i + size], []
+            chunk, params = rows[i : i + size], []
             sql = head + (", (%s)" % holders) * (len(chunk) - 1)
             for row in chunk:
-                params.extend(row)
+                params.extend(list(row))
             self.db.execute_write(sql, *params)
             self.db.commit()
-        self.db.conn.autocommit(self.db.is_auto_commit)
+        self.db.set_auto_commit(None)
         return count  # 新增的行数
 
     def delete(self, reset=True, **where) -> int:
-        tablename = self.get_table_name(quote=True)
+        table_name = self.get_table_name(quote=True)
         if where.pop("truncate", False):
-            sql = "TRUNCATE TABLE %s" % tablename
+            sql = "TRUNCATE TABLE %s" % table_name
         else:
-            sql = "DELETE FROM %s" % tablename
+            sql = "DELETE FROM %s" % table_name
         sql, params = self.db.parse_cond(sql, self.condition, **where)
         if reset:
             self.reset()
@@ -188,8 +198,8 @@ class Table(object):
                 holders.append("`%s`=%%s" % key)
                 values.append(value)
         fields = ",".join(holders)
-        tablename = self.get_table_name(quote=True)
-        sql = "UPDATE %s SET %s" % (tablename, fields)
+        table_name = self.get_table_name(quote=True)
+        sql = "UPDATE %s SET %s" % (table_name, fields)
         sql, params = self.db.parse_cond(sql, self.condition, **where)
         if len(values) > 0:
             params = list(values) + params
@@ -198,7 +208,7 @@ class Table(object):
         return self.db.execute_write(sql, *params)  # 影响的行数
 
     def save(self, row, indexes=None, reset=True):
-        """ 根据主键对应id已存在，决定是更新还是插入 """
+        """根据主键对应id已存在，决定是更新还是插入"""
         assert hasattr(row, "items")
         if indexes is None:  # 使用主键
             indexes = self.__indexes__
@@ -219,8 +229,7 @@ class Table(object):
             return False, affect_rows
 
     def iter(self, columns="*", model=None, index=None, **kwargs):
-        """ 读查询，返回迭代结果 """
-        reset = kwargs.pop("reset", True)
+        """读查询，返回迭代结果"""
         limit = int(kwargs.get("limit", -1))
         offset = int(kwargs.get("offset", 0))
         addition = self.build_group_order()
@@ -228,8 +237,8 @@ class Table(object):
             addition += " LIMIT %d, %d" % (offset, limit)
         if isinstance(columns, (list, tuple, set)):
             columns = ",".join(columns)
-        tablename = self.get_table_name(quote=True)
-        sql = "SELECT %s FROM %s" % (columns, tablename)
+        table_name = self.get_table_name(quote=True)
+        sql = "SELECT %s FROM %s" % (columns, table_name)
         sql, params = self.db.parse_cond(sql, self.condition)
         if addition:
             sql += " " + addition.strip()
@@ -243,7 +252,7 @@ class Table(object):
             else:
                 key = row.get(index, None)
                 if key is not None:
-                    yield (key, row)
+                    yield key, row
 
     def all(self, columns="*", model=None, index=None, **kwargs):
         return [r for r in self.iter(columns, model, index, **kwargs)]
@@ -255,14 +264,14 @@ class Table(object):
             return {}
 
     def apply(self, name, *args, **kwargs):
-        """ 单个值或单列的读查询 """
+        """单个值或单列的读查询"""
         name = name.strip().upper()
         if name == "COUNT" and len(args) == 0:
             column = "COUNT(*)"
         else:
             column = "%s(%s)" % (name, ", ".join(args))
-        tablename = self.get_table_name(quote=True)
-        sql = "SELECT %s FROM %s" % (column, tablename)
+        table_name = self.get_table_name(quote=True)
+        sql = "SELECT %s FROM %s" % (column, table_name)
         sql, params = self.db.parse_cond(sql, self.condition)
         kwargs["size"] = 1
         if kwargs.pop("reset", True):

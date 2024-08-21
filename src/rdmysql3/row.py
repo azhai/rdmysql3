@@ -5,7 +5,8 @@ from decimal import Decimal
 
 
 class Row(object):
-    """ 单行结果 """
+    """单行结果"""
+
     _fields = []
 
     def __init__(self, data={}):
@@ -59,9 +60,9 @@ class Row(object):
     @staticmethod
     def coerce_value(value):
         if isinstance(value, datetime):
-            value = value.strftime('%F %T')
+            value = value.strftime("%F %T")
         elif isinstance(value, date):
-            value = value.strftime('%F')
+            value = value.strftime("%F")
         elif isinstance(value, Decimal):
             value = float(value)
         return value

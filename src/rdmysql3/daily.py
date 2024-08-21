@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from datetime import date, datetime, timedelta
-
 from .archive import Archive
 
 
 class Daily(Archive):
     _suffix_mask = "%Y%m%d"
 
-    def __init__(self, tablename=""):
-        super(Daily, self).__init__(tablename)
+    def __init__(self, table_name=""):
+        super(Daily, self).__init__(table_name)
         self.set_date()
 
     def set_date(self, curr_date=None):
@@ -18,10 +17,9 @@ class Daily(Archive):
             return self
         try:
             curr_date = self.adjust_date(curr_date)
-        except:
-            pass
-        else:
             self.calender = curr_date
+        except (ValueError, AssertionError):
+            pass
         return self
 
     def adjust_date(self, calender):
@@ -71,7 +69,7 @@ class Daily(Archive):
 
 
 class Weekly(Daily):
-    """ 以周日为一周开始，跨年的一周算作前一年最后一周 """
+    """以周日为一周开始，跨年的一周算作前一年最后一周"""
 
     _suffix_mask = "%Y0%U"
 
@@ -105,7 +103,7 @@ class Monthly(Daily):
         self.calender = date(
             year=self.calender.year + offset / 12,  # 负数除法向下取整
             month=offset % 12 + 1,  # 负数求余结果也是正数或零
-            day=1
+            day=1,
         )
         return self
 

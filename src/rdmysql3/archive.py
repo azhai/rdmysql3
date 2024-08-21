@@ -8,8 +8,8 @@ class Archive(Table):
     _suffix_mask = "%03d"
     _table_names = []
 
-    def __init__(self, tablename=""):
-        super(Archive, self).__init__(tablename)
+    def __init__(self, table_name=""):
+        super(Archive, self).__init__(table_name)
         self.set_number(0)
 
     def set_number(self, number=0):
@@ -50,13 +50,13 @@ class Archive(Table):
 
     def get_table_name(self, quote=False):
         if not self._curr_has_suffix and self.is_current():
-            tablename = self.__tablename__
+            table_name = self.__tablename__
         else:
-            tablename = "%s_%s" % (self.__tablename__, self.get_suffix())
+            table_name = "%s_%s" % (self.__tablename__, self.get_suffix())
         if quote:
-            return self.quote_str(tablename)
+            return self.quote_str(table_name)
         else:
-            return tablename
+            return table_name
 
     def create_table(self, truncate=False):
         base_name = self.quote_str(self.__tablename__)
@@ -69,7 +69,7 @@ class Archive(Table):
         return self
 
     def quick_migrate(self, curr_name, prev_name, auto_incr=0):
-        rsql = "RENAME TABLE %s TO %" % (curr_name, prev_name)
+        rsql = "RENAME TABLE %s TO %s" % (curr_name, prev_name)
         self.db.execute_write(rsql)
         csql = "CREATE TABLE IF NOT EXISTS %s LIKE %s" % (curr_name, prev_name)
         self.db.execute_write(csql)

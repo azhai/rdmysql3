@@ -1,9 +1,9 @@
 [tool.poetry]
 name = "rdmysql3"
-version = "0.3.6"
+version = "0.3.8"
 description = "A mysql db layer for python3, based on nakagami/CyMySQL"
 authors = ["Ryan Liu <azhai@126.com>"]
-# readme = "README.md"
+readme = "README.md"
 license = "MIT"
 repository = "https://github.com/azhai/rdmysql3"
 keywords = ["mysql", "database", "model"]

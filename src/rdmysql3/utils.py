@@ -4,8 +4,8 @@ from .expr import Expr
 from .table import Table
 
 
-def _reset_pk(query, pk='id', num=0):
-    """ 找出需要重新排列的主键 """
+def _reset_pk(query, pk="id", num=0):
+    """找出需要重新排列的主键"""
     last_diff, changes = 0, []
     start, stop = 0, 0
     if num > 0:
@@ -26,8 +26,8 @@ def _reset_pk(query, pk='id', num=0):
     return changes
 
 
-def reset_model_pk(query, pk='id', num=0):
-    """ 重新排列自增主键 """
+def reset_model_pk(query, pk="id", num=0):
+    """重新排列自增主键"""
     try:
         assert issubclass(query, Table)
         query = query()
@@ -35,13 +35,19 @@ def reset_model_pk(query, pk='id', num=0):
         assert isinstance(query, Table)
     table = query.__tablename__
     changes = _reset_pk(query, pk=pk, num=num)
-    tpl = "UPDATE `%s` SET `%s`=`%s`-%%d WHERE `%s`>=%%d AND `%s`<=%%d" % (table, pk, pk, pk, pk)
+    tpl = "UPDATE `%s` SET `%s`=`%s`-%%d WHERE `%s`>=%%d AND `%s`<=%%d" % (
+        table,
+        pk,
+        pk,
+        pk,
+        pk,
+    )
     for chg in changes:
-        query.db.execute(tpl % chg, type='write')
+        query.db.execute(tpl % chg, type="write")
     query.reset()
-    maxid = query.apply('MAX', pk)
+    maxid = query.apply("MAX", pk)
     if maxid is not None and maxid > 0:
         tpl = "ALTER TABLE `%s` AUTO_INCREMENT=%d"
-        query.db.execute(tpl % (table, maxid + 1), type='write')
+        query.db.execute(tpl % (table, maxid + 1), type="write")
         return maxid + 1
     return 0
