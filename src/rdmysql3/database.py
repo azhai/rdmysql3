@@ -100,7 +100,9 @@ class Database(object):
         """将当前SQL记录到历史中"""
         if len(self.sqls) > 50:
             del self.sqls[:-49]
-        full_sql = sql.strip() % self.escape(params, True)
+        full_sql = sql.strip()
+        if len(params) > 0:
+            full_sql = full_sql % self.escape(params, True)
         self.sqls.append(full_sql)
         if self.logger:
             if kwargs.get("is_write", False):
